@@ -1,0 +1,11 @@
+# 构建产物：包体积 600MB+，绝不进 git，只作为 Release 附件上传
+*.tar.gz
+*.tar.zst
+*.zip
+build/
+hermes-offline/
+
+# 临时文件
+*.log
+*.tmp
+.DS_Store
