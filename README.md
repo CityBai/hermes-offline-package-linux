@@ -1,11 +1,11 @@
 # Hermes Agent 离线安装包（Linux x86_64）
 
-> 给国内内网 / 断网环境的 Linux 服务器准备的一键离线安装包。
+> 给国内内网 / 断网 / 网络环境不好的 Linux 服务器准备的一键离线安装包。
 > 不需要 uv，不需要 pip，不需要 npm，也不需要系统里预装 Python 3.11。
 
-Hermes Agent 是 [Nous Research](https://github.com/NousResearch/hermes-agent) 开源的 AI Agent 框架。它的官方安装脚本要连着访问好几个境外站点——下载 uv、拉 Python 3.11、装 100 多个 pip 依赖、再装 npm 包和 Chromium。在国内网络环境下，这套流程经常卡在某一步，而且在内网机器上根本走不通。
+Hermes Agent 是 [Nous Research](https://github.com/NousResearch/hermes-agent) 开源的 AI Agent 框架。它的官方安装脚本要连着访问好几个境外站点——下载 uv、拉 Python 3.11、装 100 多个 pip 依赖、再装 npm 包和 Chromium。在国内网络环境下，这套流程经常卡在某一步，甚至在内网机器上根本走不通。
 
-这个项目把整条链路打完包：**解压、跑一个脚本、装完就能用。**
+这个项目基于完整部署的linux版hermes agent把整条链路打完包：**解压、跑一个脚本、装完就能用。**
 
 ---
 
@@ -22,7 +22,6 @@ Hermes Agent 是 [Nous Research](https://github.com/NousResearch/hermes-agent) �
 
 压缩包约 **646 MB**，解压后约 **2.1 GB**，安装后占约 **2.1 GB**。
 
-刻意**没有**打包：`.git` 历史（929 MB）、测试集、文档站，以及任何配置文件、API 密钥、会话记录。
 
 ---
 
