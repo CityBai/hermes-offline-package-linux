@@ -82,7 +82,16 @@ ok "已释放 $(du -sh "$PREFIX" | awk '{print $1}')"
 # ---------------- 3. venv 重定位 ----------------
 say "3/7" "修正 Python 虚拟环境路径"
 VENV="$PREFIX/app/venv"
-[ -x "$VENV/bin/python3" ] || die "venv 里没有 python3，包有问题"
+
+# ⚠️ 这里不能用 [ -x "$VENV/bin/python3" ] 做前置检查。
+# venv/bin/python3 是符号链接，最终指向包内 CPython；在重建链接之前，
+# 它要么是构建机的绝对路径死链，要么依赖 python/ 目录的链接链完整。
+# -x 遇到断链直接返回假，会把"还没重建"误报成"包有问题"。
+# 正确做法：先确认包内解释器本体在，再重建链接，最后才验可执行。
+
+PYBIN="$PREFIX/python/cpython-3.11-linux-x86_64-gnu/bin/python3.11"
+[ -e "$PYBIN" ] || [ -L "$PYBIN" ] || die "包内解释器缺失：$PYBIN（检查 python/ 目录是否完整拷过来了）"
+[ -f "$PYBIN" ] || die "包内解释器不是普通文件：$PYBIN"
 
 cat > "$VENV/pyvenv.cfg" <<EOF
 home = $PREFIX/python/cpython-3.11-linux-x86_64-gnu/bin
@@ -93,11 +102,12 @@ EOF
 
 # ⚠️ venv/bin/python 原本指向构建机的绝对路径（/usr/local/share/uv/python/...），
 # 在目标机上这是断链，必须先重建成包内解释器，否则整个 venv 起不来。
-PYBIN="$PREFIX/python/cpython-3.11-linux-x86_64-gnu/bin/python3.11"
-[ -x "$PYBIN" ] || die "包内解释器缺失或不可执行：$PYBIN"
 ln -sfn "$PYBIN" "$VENV/bin/python"
 ln -sfn "python" "$VENV/bin/python3"
 ln -sfn "python" "$VENV/bin/python3.11"
+
+# 链接重建之后 -x 才有意义：此时 python3 已经指向确实存在的包内解释器
+[ -x "$VENV/bin/python3" ] || die "venv/bin/python3 不可执行（解析为：$(readlink -f "$VENV/bin/python3" 2>/dev/null || echo '断链')）"
 ok "解释器链接已重建 → $PYBIN"
 
 n_fixed=0

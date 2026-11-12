@@ -29,10 +29,10 @@ Hermes Agent 是 [Nous Research](https://github.com/NousResearch/hermes-agent) �
 
 ```bash
 # 1. 从 Releases 页面下载
-#    hermes-offline-20261104-x86_64.tar.gz
+#    hermes-offline-20261111-x86_64.tar.gz
 
 # 2. 解压
-tar xzf hermes-offline-20261104-x86_64.tar.gz
+tar xzf hermes-offline-20261111-x86_64.tar.gz
 cd hermes-offline
 
 # 3. 安装（需要 root）
@@ -142,6 +142,60 @@ tar czf hermes-offline-<日期>-x86_64.tar.gz hermes-offline
 - Node 在 `$HERMES_HOME/node`
 
 路径不同的话改 `build.sh` 开头的几个变量即可。
+
+---
+
+## 踩坑记录
+
+跨机器分发包最容易死在符号链接上。下面几个坑都是实际安装时踩到的，**构建机上永远复现不了**——链接在构建机上是通的，只有干净的目标机才会暴露。
+
+### 1. `venv/bin/python` 指向构建机绝对路径
+
+uv 创建的 venv 里，`venv/bin/python` 是指向构建机 Python 的绝对路径符号链接：
+
+```
+app/venv/bin/python -> /usr/local/share/uv/python/cpython-3.11-linux-x86_64-gnu/bin/python3.11
+```
+
+目标机上这个路径不存在，整条链断掉，venv 起不来。
+
+**处理**：包内改成相对链接 `../../../../python/cpython-3.11-linux-x86_64-gnu/bin/python3.11`，`install.sh` 安装时再重建一次并重写 `pyvenv.cfg`。
+
+### 2. 用 `-x` 检查符号链接会误报
+
+```bash
+[ -x "$VENV/bin/python3" ] || die "venv 里没有 python3，包有问题"
+```
+
+`-x` 遇到断链一律返回假。这个检查如果放在重建链接**之前**，无论真实原因是链接没建好、还是 `python/` 目录没拷全，都报同一句"包有问题"，指不到病因。
+
+**处理**：先验证包内解释器本体存在，再重建链接，最后才验可执行；失败时打印 `readlink -f` 的解析结果。
+
+### 3. `cp -a` 可能漏掉大目录
+
+现象是 `[2/7] 已释放 1.4G`，而正常接近 2 GB。此时 `python/` 没拷全。
+
+**排查**：
+
+```bash
+du -sh ./python /opt/hermes/python     # 两个数应该一致
+```
+
+不一致就手动补拷后重建链接：
+
+```bash
+cp -a python /opt/hermes/python
+VENV=/opt/hermes/app/venv
+PYBIN=/opt/hermes/python/cpython-3.11-linux-x86_64-gnu/bin/python3.11
+ln -sfn "$PYBIN" "$VENV/bin/python"
+ln -sfn "python" "$VENV/bin/python3"
+ln -sfn "python" "$VENV/bin/python3.11"
+$VENV/bin/python3 --version
+```
+
+### 教训
+
+改完 `install.sh` 一定要在**干净的目标机**上实测一遍。构建机自测通过说明不了任何问题。
 
 ---
 
