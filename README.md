@@ -29,10 +29,10 @@ Hermes Agent 是 [Nous Research](https://github.com/NousResearch/hermes-agent) �
 
 ```bash
 # 1. 从 Releases 页面下载
-#    hermes-offline-20261111-x86_64.tar.gz
+#    hermes-offline-20261112-x86_64.tar.gz
 
 # 2. 解压
-tar xzf hermes-offline-20261111-x86_64.tar.gz
+tar xzf hermes-offline-20261112-x86_64.tar.gz
 cd hermes-offline
 
 # 3. 安装（需要 root）
